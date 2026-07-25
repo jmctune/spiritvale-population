@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spiritvale Population</title>
+  <meta name="description" content="Timeseries of Spiritvale server populations, scraped every 15 minutes." />
+  <link rel="stylesheet" href="./assets/vendor/uPlot.min.css" />
+  <link rel="stylesheet" href="./assets/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Spiritvale Population</h1>
+    <div class="sub" id="subtitle">loading…</div>
+  </header>
+
+  <main>
+    <div class="tabs">
+      <button class="tab active" data-view="regions">Regions</button>
+      <button class="tab" data-view="servers">Clusters</button>
+    </div>
+
+    <!-- Regions view -->
+    <section class="view active" id="view-regions">
+      <div class="tiles" id="region-tiles"></div>
+
+      <div class="panel">
+        <h2>Total players online over time</h2>
+        <div class="ranges" id="total-ranges"></div>
+        <div class="chart" id="total-chart"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Players by region over time</h2>
+        <div class="ranges" id="region-ranges"></div>
+        <div class="chart" id="region-chart"></div>
+        <div class="legend" id="region-legend"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Channels per region over time</h2>
+        <div class="ranges" id="count-ranges"></div>
+        <div class="chart" id="region-count-chart"></div>
+        <div class="legend" id="region-count-legend"></div>
+      </div>
+    </section>
+
+    <!-- Clusters view: cluster tiles grouped by region; drill into channels -->
+    <section class="view" id="view-servers">
+      <div class="controls">
+        <input type="search" id="server-search" placeholder="filter clusters or channels by name…" autocomplete="off" />
+        <select id="region-filter"><option value="">all regions</option></select>
+        <select id="sort-by">
+          <option value="name">sort: name</option>
+          <option value="players-desc">sort: players (high→low)</option>
+          <option value="players-asc">sort: players (low→high)</option>
+        </select>
+      </div>
+      <div class="hint" style="margin: 0 0 4px;">Each tile is a server cluster, grouped by region and shaded by current player load. Click a cluster to see its channels.</div>
+      <div class="hint-sm" style="margin: 0 0 14px;"><span class="unknown-chip">unknown</span> = Spiritvale did not publish a metric at this time</div>
+      <div id="server-map"></div>
+    </section>
+  </main>
+
+  <!-- Detail modal: cluster (channel grid) -> channel (history chart) -->
+  <div class="modal-backdrop" id="modal">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-head-left">
+          <button class="back" id="modal-back" hidden>&larr; back</button>
+          <h2 id="modal-title"></h2>
+        </div>
+        <button class="close" id="modal-close" aria-label="close">×</button>
+      </div>
+      <div class="meta" id="modal-meta"></div>
+      <!-- cluster mode: grid of channel tiles -->
+      <div id="cluster-body"><div id="cluster-heat" class="heat"></div></div>
+      <!-- channel mode: history chart -->
+      <div id="server-body">
+        <div class="host-info" id="server-host"></div>
+        <div class="ranges" id="server-ranges"></div>
+        <div class="chart" id="server-chart"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./assets/vendor/uPlot.iife.min.js"></script>
+  <script src="./assets/app.js"></script>
+</body>
+</html>
