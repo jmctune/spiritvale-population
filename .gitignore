@@ -1,0 +1,12 @@
+node_modules/
+*.log
+.DS_Store
+scratchpad/
+# local env holding the endpoint URL - never commit
+.env
+# transient scrape artifacts (not the committed DB)
+data/*.sqlite-wal
+data/*.sqlite-shm
+page.html
+inertia.json
+servers.json
