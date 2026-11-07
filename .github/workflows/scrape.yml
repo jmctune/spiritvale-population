@@ -1,0 +1,64 @@
+name: scrape
+
+# Primary trigger is an external cron (workflow_dispatch, via tools/trigger-scrape.sh)
+# firing on the quarter: :00/:15/:30/:45. The `schedule` cron below is a fallback,
+# offset to :03/:18/:33/:48; on those runs the scrape no-ops if the primary already
+# produced a point for the current window (see the --skip-if-current step).
+on:
+  schedule:
+    - cron: '3,18,33,48 * * * *'
+  workflow_dispatch:
+  repository_dispatch:
+    types: [scrape]
+
+# Serialize runs so overlapping triggers never race on the force-push.
+concurrency:
+  group: scrape
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        # fetch-depth 1 is enough: history is a single force-pushed commit.
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Scrape
+        id: scrape
+        # On the schedule fallback, skip if the primary already scraped this window.
+        env:
+          SPIRITVALE_SERVER_LIST_URL: ${{ vars.SPIRITVALE_SERVER_LIST_URL }}
+        run: node scripts/scrape.mjs ${{ github.event_name == 'schedule' && '--skip-if-current' || '' }}
+
+      - name: Build dashboard data
+        if: steps.scrape.outputs.scraped == 'true'
+        run: node scripts/build.mjs
+
+      - name: Commit as single force-pushed commit
+        if: steps.scrape.outputs.scraped == 'true'
+        run: |
+          set -euo pipefail
+          git config user.name "spiritvale-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "no changes to commit"
+            exit 0
+          fi
+          # Parentless commit -> the branch history is always exactly one commit.
+          TREE=$(git write-tree)
+          COMMIT=$(git commit-tree "$TREE" -m "data: scrape @ $(date -u +%Y-%m-%dT%H:%M:%SZ)")
+          git push --force origin "$COMMIT:refs/heads/${GITHUB_REF_NAME}"
