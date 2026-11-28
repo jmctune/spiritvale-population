@@ -1,0 +1,19 @@
+{
+  "name": "spiritvale-population",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Scrapes Spiritvale server-status every 15 minutes and renders a timeseries dashboard on GitHub Pages.",
+  "scripts": {
+    "scrape": "node scripts/scrape.mjs",
+    "build": "node scripts/build.mjs",
+    "backfill-zero": "node scripts/backfill-zero.mjs",
+    "run-once": "node scripts/scrape.mjs && node scripts/build.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1"
+  }
+}
